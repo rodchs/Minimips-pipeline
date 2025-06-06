@@ -5,10 +5,25 @@
 #include "pipeline.h"
 
 
-void controle(int *estagio_inst, pipeline_estagio_1 *estagio_1, int *pc, Instrucao inst){
+void controle(int *estagio_inst, pipeline_estagio_1 *estagio_1, pipeline_estagio_2 *estagio_2, int *pc, Mem_p *mem_p, BancoRegistradores *BR) {
     if(*estagio_inst == 0){
         estagio_1->inst = inst;
         estagio_1->pc = *pc;
+        *estagio_inst = 1;
+    } else (*estagio_inst == 1) {
+        Instrucao inst = estagio_1->inst;
+        estagio_2->inst_decodificada = inst;
+        estagio_2->pc = estagio_1->pc;
+
+         if (inst.tipo == 1 || inst.tipo == 2) {
+            estagio_2->valor_rs = BR->reg[inst.rs];
+            estagio_2->valor_rt = BR->reg[inst.rt];
+        } else {
+            estagio_2->valor_rs = 0;
+            estagio_2->valor_rt = 0;
+        }
+
+        *estagio_inst = 2; 
     }
 }
 

@@ -1,0 +1,31 @@
+pipe.h
+
+typedef struct {
+    Instrucao inst_decodificada;
+    int pc;
+    int valor_rs;
+    int valor_rt;
+} pipeline_estagio_2;
+
+
+pipe.c
+
+void decodificar_estagio_2(int *estagio_inst, pipeline_estagio_1 *estagio_1, pipeline_estagio_2 *estagio_2, BancoRegistradores *BR) {
+    if (*estagio_inst == 1) {
+        // Decodifica a instrução binária
+        Instrucao inst = decod(estagio_1->inst.inst);
+
+        // Copia a instrução decodificada e o PC
+        estagio_2->inst_decodificada = inst;
+        estagio_2->pc = estagio_1->pc;
+
+        // Lê os valores dos registradores (se aplicável)
+        if (inst.tipo == 1 || inst.tipo == 2) {
+            estagio_2->valor_rs = BR->reg[inst.rs];
+            estagio_2->valor_rt = BR->reg[inst.rt];
+        } else {
+            estagio_2->valor_rs = 0;
+            estagio_2->valor_rt = 0;
+        }
+    }
+}

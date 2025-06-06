@@ -33,8 +33,7 @@ typedef struct{
     Instrucao inst;
 } pipeline_estagio_1;
 
-ontrole(int *estagio_inst, pipeline_estagio_1 *estagio_1, int *pc, Instrucao inst);
-int ula(int a, int b, int op);
+void controle(int *estagio_inst, pipeline_estagio_1 *estagio_1, pipeline_estagio_2 *estagio_2, int *pc, Mem_p *mem_p, BancoRegistradores *BR);int ula(int a, int b, int op);
 void carregarMemoria(Mem_p *mem_p);
 void carregarMemoriaDados(Mem_d *mem_d);
 void ImprimirMemoriaDados(Mem_d *mem_d);

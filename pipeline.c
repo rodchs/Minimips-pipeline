@@ -4,27 +4,57 @@
 #include <stdio.h>
 #include "pipeline.h"
 
+void estagio_busca(Mem_p *mem_p, int *pc, pipeline_estagio_1 *estagio1){ 
+    strncpy(estagio1->inst, mem_p[*pc].inst, 17);
+    pc++;
+    estagio1->pc = pc;
+}
 
-void controle(int *estagio_inst, pipeline_estagio_1 *estagio_1, pipeline_estagio_2 *estagio_2, int *pc, Mem_p *mem_p, BancoRegistradores *BR) {
-    if(*estagio_inst == 0){
-        estagio_1->inst = inst;
-        estagio_1->pc = *pc;
-        *estagio_inst = 1;
-    } else (*estagio_inst == 1) {
-        Instrucao inst = estagio_1->inst;
-        estagio_2->inst_decodificada = inst;
-        estagio_2->pc = estagio_1->pc;
+void estagio_decod(int *pc, pipeline_estagio_1 *estagio1, pipeline_estagio_2 *estagio2, BancoRegistradores *banco){
+    estagio2->inst = decod(estagio1->inst);
+    estagio2->A = banco->reg[estagio2->inst.rs];
+    estagio2->B = banco->reg[estagio2->inst.rt];
+    estagio2->pc = pc;
+    estagio2->f_jump = (estagio2->inst.tipo == 3) ? 1 : 0;
+}
 
-         if (inst.tipo == 1 || inst.tipo == 2) {
-            estagio_2->valor_rs = BR->reg[inst.rs];
-            estagio_2->valor_rt = BR->reg[inst.rt];
-        } else {
-            estagio_2->valor_rs = 0;
-            estagio_2->valor_rt = 0;
-        }
+void estagio_exec(pipeline_estagio_3 *estagio3, pipeline_estagio_2 *estagio2){
+    estagio3->ULA_out = ula(estagio2->A, estagio2->B, estagio2->inst.funct);
+    estagio3->address = estagio2->inst.address;
+    estagio3->branch_address = estagio2->inst.address + estagio2->pc;
+    estagio3->f_jump = estagio2->f_jump;
+    estagio3->pc = estagio2->pc;
+    estagio3->rd = (estagio2->inst.opcode = 0) ? estagio2->inst.rd : estagio2->inst.rt;
+    estagio3->dado_escrita = estagio2->B;
 
-        *estagio_inst = 2; 
+    if(estagio2->inst.tipo = 2){
+        estagio3->ULA_out = ula(estagio2->A, estagio2->inst.immediate, estagio2->inst.funct);    
+        estagio3->f_zero = ula(estagio2->A, estagio2->inst.immediate, 4);  
+        if(estagio2->inst.opcode == 8){
+            estagio3->f_branch = 1;
+        }  
     }
+    else{
+        estagio3->ULA_out = ula(estagio2->A, estagio2->B, estagio2->inst.funct);
+        estagio3->f_zero = ula(estagio2->A, estagio2->B, 4);
+    }
+}
+
+void estagio_memoria(pipeline_estagio_3 *estagio3, pipeline_estagio_4 *estagio4, int *pc){
+    if(estagio3->f_jump == 1){
+        if(estagio3->f_branch == 1 && estagio3->f_zero == 1){
+            *pc = estagio3->branch_address;
+            return;
+        }
+        *pc = estagio3->address;
+        return;
+    }
+    estagio4->dado_lido = mem_d[estagio3->ULA_out];
+        if(estagio3->f_memwrite == 1){
+            mem_d[estagio3->ULA_out = estagio3->dado_escrita];
+        }
+        
+    
 }
 
 Instrucao decod(char* inst) {
@@ -79,6 +109,8 @@ int ula(int a, int b, int op) {
             return a & b;
         case 3: //or
             return a | b;
+        case 4:
+            return ((a - b == 0)) ? 1 : 0;
         default:
             printf("Operacao invalida.\n"); 
             return 0;

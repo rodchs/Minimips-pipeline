@@ -6,6 +6,10 @@
 #include <stdio.h>
 
 typedef struct{
+    int endereco;
+} Pc;
+
+typedef struct{
     char inst[17];
 } Mem_p;
 
@@ -31,29 +35,62 @@ typedef struct {
 typedef struct{
     int pc;
     char inst[17];
-} pipeline_estagio_1;
+
+    int check;
+} Pipeline_estagio_1;
 
 typedef struct{
     int pc;
     int A;
     int B;
     int f_jump;
-    Instrucao inst;
-} pipeline_estagio_2;
+    int f_branch;
+    int immediate;
+    int address;
+    int RegDst;
+    int reg_write;
+    int reg_mem;
+    int mem_write;
+    int ULAOp;
+    int rd;
+    int rt;
+    int dado_escrita;
+    int ULAFonte;
+
+    int check;
+
+} Pipeline_estagio_2;
 
 typedef struct{
     int pc;
     int address;
     int ULA_out;
     int f_zero;
-    int f_jump;
     int f_branch;
+    int mem_write;
     int rd;
     int branch_address;
     int dado_escrita;
-} pipeline_estagio_3;
+    int reg_write;
+    int reg_mem;
+    int f_jump;
 
-void controle(int *estagio_inst, pipeline_estagio_1 *estagio_1, pipeline_estagio_2 *estagio_2, int *pc, Mem_p *mem_p, BancoRegistradores *BR);int ula(int a, int b, int op);
+    int check;
+
+} Pipeline_estagio_3;
+
+typedef struct{
+    int dado_lido;
+    int reg_write;
+    int reg_mem;
+    int ULA_out;
+    int rd;
+
+    int check;
+
+} Pipeline_estagio_4;
+
+Instrucao decod(char* inst);
 void carregarMemoria(Mem_p *mem_p);
 void carregarMemoriaDados(Mem_d *mem_d);
 void ImprimirMemoriaDados(Mem_d *mem_d);
@@ -63,6 +100,11 @@ void conv_asm(FILE* arquivo_asm, Instrucao inst);
 void salvar_asm(Mem_p *mem_p);
 void salvar_data(Mem_d *mem_d);
 void initMemorias(Mem_p *mem_p, Mem_d *mem_d);
+void estagio_busca(Mem_p *mem_p, Pc *pc, Pipeline_estagio_1 *estagio1);
+void estagio_decod(Pipeline_estagio_1 *estagio1, Pipeline_estagio_2 *estagio2, BancoRegistradores *banco);
+void estagio_exec(Pipeline_estagio_3 *estagio3, Pipeline_estagio_2 *estagio2);
+void estagio_memoria(Pipeline_estagio_3 *estagio3, Pipeline_estagio_4 *estagio4, Pc *pc, Mem_d *mem_d);
+void estagio_writeback(BancoRegistradores *banco, Pipeline_estagio_4 *estagio4);
 
 
 #endif /* PIPELINE_H__*/

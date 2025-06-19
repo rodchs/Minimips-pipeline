@@ -5,64 +5,22 @@
 #include "pipeline.h"
 #include "pipeline.c"
 
-Mem_p mem_p[256];
-Mem_d mem_d[256];
-int pc = 0;
-
-
-void executar_instrucao(char* bin_instr, BancoRegistradores *BR, Mem_d *mem_d) {
-    Instrucao inst = decod(bin_instr);
-    int pulou = 0;
-    
-    printf("inst: %s\n", bin_instr);
-    printf("opcode: %d\n", inst.opcode);
-    printf("tipo: %d\n", inst.tipo);
-    printf("rs: %d\n", inst.rs);
-    printf("rt: %d\n", inst.rt);
-    printf("im: %d\n", inst.immediate);
-    
-    switch(inst.tipo) {
-        case 1: // R
-        if (inst.funct == 0) { // and
-            BR->reg[inst.rd] = ula(BR->reg[inst.rs], BR->reg[inst.rt], 0);
-        } else if (inst.funct == 1) { // or
-            BR->reg[inst.rd] = ula(BR->reg[inst.rs], BR->reg[inst.rt], 1);
-        } else if (inst.funct == 2) { // add
-            BR->reg[inst.rd] = ula(BR->reg[inst.rs], BR->reg[inst.rt], 2);
-        } else if (inst.funct == 3) { // sub
-            BR->reg[inst.rd] = ula(BR->reg[inst.rs], BR->reg[inst.rt], 4);
-        }
-        break;
-        
-        case 2: // I
-        if (inst.opcode == 8) { // beq
-            if (BR->reg[inst.rs] == BR->reg[inst.rt]){
-                pc += (inst.immediate*2);
-                pulou = 1;
-            }
-        } else if (inst.opcode == 11) { // lw
-            BR->reg[inst.rt] = mem_d[BR->reg[inst.rs] + inst.immediate].dado;
-        } else if (inst.opcode == 15) { // sw
-            int val = BR->reg[inst.rt];
-            mem_d[BR->reg[inst.rs] + inst.immediate].dado = BR->reg[inst.rt];
-        } else if(inst.opcode == 4){
-            BR->reg[inst.rt] = BR->reg[inst.rs];
-        }
-        break;
-        case 3: // J
-        pc = inst.address;
-        break;
-    }
-    if (!pulou) {
-        pc++; // Atualiza PC para a próxima instrução
-    }
-}
-
 
 int main() {
+    Mem_d mem_d[256];
+    Mem_p mem_p[256];
+    
     initMemorias(&mem_p, &mem_d);
     BancoRegistradores BR = {{0}};
     int c = 1;
+    
+    Pc pc;
+    pc.endereco = 0;
+    Pipeline_estagio_1 estagio1;
+    Pipeline_estagio_2 estagio2;
+    Pipeline_estagio_3 estagio3;
+    Pipeline_estagio_4 estagio4;
+
     while (c) {
         int m;
         
@@ -111,15 +69,34 @@ int main() {
                 salvar_data(&mem_d);
                 break;
             case 9: //run
-                while (pc < 256 && strlen(mem_p[pc].inst) > 0) {
-                    executar_instrucao(mem_p[pc].inst, &BR, &mem_d);
-                }
+                estagio_writeback(&BR, &estagio4); 
+                printf("ESTASGIO WB\n");         
+                printf("DADO_LIDO: %d|ULA_OUT: %d|REG_WRITE: %d|REG_MEM: %d| RD: %d|\n", estagio4.dado_lido, estagio4.ULA_out, estagio4.reg_write, estagio4.reg_mem, estagio4.rd); 
+                estagio_memoria(&estagio3, &estagio4, &pc, &mem_d);
+                printf("ESTASGIO MEM\n");         
+                printf("PC_NOVO: %d|DADO_LIDO: %d|ULA_OUT: %d|REG_WRITE: %d|REG_MEM: %d| RD: %d|\n", pc, estagio4.dado_lido, estagio4.ULA_out, estagio4.reg_write, estagio4.reg_mem, estagio4.rd); 
+                estagio_exec(&estagio3, &estagio2);
+                printf("ESTASGIO EXE\n");         
+                printf("PC: %d|ULA_OUT: %d|F_ZERO: %d|F_JMP: %d| F_BRANCH: %d|\n", estagio3.pc, estagio3.ULA_out, estagio3.f_zero, estagio3.f_jump, estagio3.f_branch); 
+                estagio_decod(&estagio1, &estagio2, &BR);  
+                printf("ESTASGIO DECOD\n");         
+                printf("PC: %d|A: %d|B: %d|F_JMP: %d|ULAOp: %d|ULAFonte: %d|MEM_WRITE: %d\n", estagio2.pc, estagio2.A, estagio2.B, estagio2.f_jump, estagio2.ULAOp, estagio2.ULAFonte, estagio2.mem_write); 
+                estagio_busca(&mem_p, &pc, &estagio1);
+                printf("ESTASGIO BUSCA\n");         
+                printf("PC: %d| INST: %s\n", estagio1.pc, estagio1.inst);
                 break;
             case 10: // step
-            if (strlen(mem_p[pc].inst) > 0) {
-                executar_instrucao(mem_p[pc].inst, &BR, &mem_d);  // Executa uma instrução
-                printf("Executando instrucao no PC = %d\n", pc);
-            }
+
+                // ESSE CASO ESTA SENDO USADO PARA TESTE// RODA OS 5 ESTAGIOS DE UMA UNICA INSTRUCAO DE UMA VEZ SO PARA TESTAR SE A INSTRUCAO ESTA FUNCIONANDO
+                estagio_busca(&mem_p, &pc, &estagio1);
+                printf("PC: %d| INST: %s\n", estagio1.pc, estagio1.inst);
+                estagio_decod(&estagio1, &estagio2, &BR);  
+                printf("PC: %d|A: %d|B: %d|F_JMP: %d|ULAOp: %d|ULAFonte: %d|MEM_WRITE: %d\n", estagio2.pc, estagio2.A, estagio2.B, estagio2.f_jump, estagio2.ULAOp, estagio2.ULAFonte, estagio2.mem_write); 
+                estagio_exec(&estagio3, &estagio2);
+                printf("PC: %d|ULA_OUT: %d|F_ZERO: %d|F_JMP: %d| F_BRANCH: %d|\n", estagio3.pc, estagio3.ULA_out, estagio3.f_zero, estagio3.f_jump, estagio3.f_branch); 
+                estagio_memoria(&estagio3, &estagio4, &pc, &mem_d);
+                printf("PC_NOVO: %d|DADO_LIDO: %d|ULA_OUT: %d|REG_WRITE: %d|REG_MEM: %d| RD: %d|\n", pc, estagio4.dado_lido, estagio4.ULA_out, estagio4.reg_write, estagio4.reg_mem, estagio4.rd); 
+                estagio_writeback(&BR, &estagio4);         
             break;
             case 0:
                 printf("Programa finalizado.\n");

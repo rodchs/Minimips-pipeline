@@ -4,57 +4,107 @@
 #include <stdio.h>
 #include "pipeline.h"
 
-void estagio_busca(Mem_p *mem_p, int *pc, pipeline_estagio_1 *estagio1){ 
-    strncpy(estagio1->inst, mem_p[*pc].inst, 17);
-    pc++;
-    estagio1->pc = pc;
+void estagio_busca(Mem_p *mem_p, Pc *pc, Pipeline_estagio_1 *estagio1){ 
+    strncpy(estagio1->inst, mem_p[pc->endereco].inst, 17);
+    estagio1->pc = pc->endereco;
+    estagio1->check = 1;
+    pc->endereco++;
 }
 
-void estagio_decod(int *pc, pipeline_estagio_1 *estagio1, pipeline_estagio_2 *estagio2, BancoRegistradores *banco){
-    estagio2->inst = decod(estagio1->inst);
-    estagio2->A = banco->reg[estagio2->inst.rs];
-    estagio2->B = banco->reg[estagio2->inst.rt];
-    estagio2->pc = pc;
-    estagio2->f_jump = (estagio2->inst.tipo == 3) ? 1 : 0;
+void estagio_decod(Pipeline_estagio_1 *estagio1, Pipeline_estagio_2 *estagio2, BancoRegistradores *banco){
+    if(estagio1->check != 1) return;
+
+    // DECODER
+    Instrucao inst = decod(estagio1->inst);
+    estagio2->A = banco->reg[inst.rs];
+    estagio2->B = banco->reg[inst.rt];
+    estagio2->dado_escrita = banco->reg[inst.rt];
+    estagio2->pc = estagio1->pc;
+    estagio2->rt = inst.rt;
+    estagio2->immediate = inst.immediate;
+    estagio2->rd = inst.rd;
+    estagio2->address = inst.address;
+    // CONTROLE
+    estagio2->ULAOp =(inst.tipo == 1) ? inst.funct : 0;
+    estagio2->ULAFonte = (inst.tipo == 2) ? 1 : 0;
+    estagio2->RegDst = (inst.opcode == 0) ? 1 : 0;
+    estagio2->f_jump = (inst.tipo == 3) ? 1 : 0;
+    estagio2->f_branch = (inst.opcode == 8) ? 1 : 0;
+    estagio2->mem_write = (inst.opcode == 15) ? 1 : 0;
+    estagio2->reg_write = (inst.tipo == 1 || inst.opcode == 4 || inst.opcode == 11) ? 1 : 0;
+    estagio2->reg_mem = (inst.opcode == 11) ? 1 : 0;
+
+    estagio2->check = 1;
+
 }
 
-void estagio_exec(pipeline_estagio_3 *estagio3, pipeline_estagio_2 *estagio2){
-    estagio3->ULA_out = ula(estagio2->A, estagio2->B, estagio2->inst.funct);
-    estagio3->address = estagio2->inst.address;
-    estagio3->branch_address = estagio2->inst.address + estagio2->pc;
+void estagio_exec(Pipeline_estagio_3 *estagio3, Pipeline_estagio_2 *estagio2){
+
+    if(estagio2->check != 1) return;
+
+    if(estagio2->ULAFonte == 1){
+        estagio3->ULA_out = ula(estagio2->A, estagio2->immediate, estagio2->ULAOp);
+    }else{
+        estagio3->ULA_out = ula(estagio2->A, estagio2->B, estagio2->ULAOp);
+    }
+    estagio3->address = estagio2->address;
+    estagio3->branch_address = estagio2->immediate;
     estagio3->f_jump = estagio2->f_jump;
     estagio3->pc = estagio2->pc;
-    estagio3->rd = (estagio2->inst.opcode = 0) ? estagio2->inst.rd : estagio2->inst.rt;
-    estagio3->dado_escrita = estagio2->B;
+    estagio3->rd = (estagio2->RegDst = 1) ? estagio2->rt : estagio2->rd;
+    estagio3->dado_escrita = estagio2->dado_escrita;
+    estagio3->reg_write = estagio2->reg_write;
+    estagio3->mem_write = estagio2->mem_write;
+    estagio3->reg_mem = estagio2->reg_mem;
+    estagio3->f_branch = estagio2->f_branch;
+    estagio3->f_zero = ula(estagio2->A, estagio2->B, 4); 
+    
+    estagio3->check = 1;
+}
 
-    if(estagio2->inst.tipo = 2){
-        estagio3->ULA_out = ula(estagio2->A, estagio2->inst.immediate, estagio2->inst.funct);    
-        estagio3->f_zero = ula(estagio2->A, estagio2->inst.immediate, 4);  
-        if(estagio2->inst.opcode == 8){
-            estagio3->f_branch = 1;
-        }  
+void estagio_memoria(Pipeline_estagio_3 *estagio3, Pipeline_estagio_4 *estagio4, Pc *pc, Mem_d *mem_d){
+    if(estagio3->check != 1) return;
+    
+    // ACESSO A MEMORIA
+    
+    estagio4->dado_lido = mem_d[estagio3->ULA_out].dado;
+    
+    if(estagio3->mem_write == 1){
+        mem_d[estagio3->ULA_out].dado = estagio3->dado_escrita;
     }
-    else{
-        estagio3->ULA_out = ula(estagio2->A, estagio2->B, estagio2->inst.funct);
-        estagio3->f_zero = ula(estagio2->A, estagio2->B, 4);
+    
+    estagio4->reg_write = estagio3->reg_write;
+    estagio4->reg_mem = estagio3->reg_mem;
+    estagio4->ULA_out = estagio3->ULA_out;
+    estagio4->rd = estagio3->rd;
+
+    estagio4->check = 1;
+
+    // DESVIO
+
+    if(estagio3->f_branch == 1 && estagio3->f_zero == 1){
+        pc->endereco = estagio3->branch_address;
+        return;
+    }
+
+    if(estagio3->f_jump == 1){
+        pc->endereco = estagio3->address;
+        return;
     }
 }
 
-void estagio_memoria(pipeline_estagio_3 *estagio3, pipeline_estagio_4 *estagio4, int *pc){
-    if(estagio3->f_jump == 1){
-        if(estagio3->f_branch == 1 && estagio3->f_zero == 1){
-            *pc = estagio3->branch_address;
-            return;
+void estagio_writeback(BancoRegistradores *banco, Pipeline_estagio_4 *estagio4){
+
+    if(estagio4->check != 1) return;
+
+    if(estagio4->reg_write == 1){
+        if(estagio4->reg_mem == 1){
+            banco->reg[estagio4->rd] = estagio4->dado_lido;
         }
-        *pc = estagio3->address;
-        return;
+        else{
+            banco->reg[estagio4->rd] = estagio4->ULA_out;
+        }
     }
-    estagio4->dado_lido = mem_d[estagio3->ULA_out];
-        if(estagio3->f_memwrite == 1){
-            mem_d[estagio3->ULA_out = estagio3->dado_escrita];
-        }
-        
-    
 }
 
 Instrucao decod(char* inst) {
@@ -82,6 +132,12 @@ Instrucao decod(char* inst) {
         i.tipo = 3;
         strncpy(buffer, inst + 4, 12); buffer[12] = '\0';
         i.address = strtol(buffer, NULL, 2);
+
+        strncpy(buffer, inst + 4, 3); buffer[3] = '\0';
+        i.rs = strtol(buffer, NULL, 2);
+
+        strncpy(buffer, inst + 7, 3); buffer[3] = '\0';
+        i.rt = strtol(buffer, NULL, 2);
     } else {
         i.tipo = 2;
         strncpy(buffer, inst + 4, 3); buffer[3] = '\0';
@@ -103,17 +159,19 @@ int ula(int a, int b, int op) {
     switch (op) {
         case 0: //add
             return a + b;
+            break;
         case 1: //sub
             return a - b;
+            break;
         case 2: //and
             return a & b;
+            break;
         case 3: //or
             return a | b;
+            break;
         case 4:
             return ((a - b == 0)) ? 1 : 0;
-        default:
-            printf("Operacao invalida.\n"); 
-            return 0;
+            break;
     }
 }
 

@@ -36,13 +36,14 @@ typedef struct{
     int pc;
     char inst[17];
 
-    int check;
 } Pipeline_estagio_1;
 
 typedef struct{
     int pc;
     int A;
     int B;
+    int sel_A;
+    int sel_B;
     int f_jump;
     int f_branch;
     int immediate;
@@ -51,13 +52,12 @@ typedef struct{
     int reg_write;
     int reg_mem;
     int mem_write;
+    int mem_read;
     int ULAOp;
     int rd;
     int rt;
     int dado_escrita;
     int ULAFonte;
-
-    int check;
 
 } Pipeline_estagio_2;
 
@@ -68,14 +68,13 @@ typedef struct{
     int f_zero;
     int f_branch;
     int mem_write;
+    int mem_read;
     int rd;
     int branch_address;
     int dado_escrita;
     int reg_write;
     int reg_mem;
     int f_jump;
-
-    int check;
 
 } Pipeline_estagio_3;
 
@@ -85,8 +84,6 @@ typedef struct{
     int reg_mem;
     int ULA_out;
     int rd;
-
-    int check;
 
 } Pipeline_estagio_4;
 
@@ -101,10 +98,13 @@ void salvar_asm(Mem_p *mem_p);
 void salvar_data(Mem_d *mem_d);
 void initMemorias(Mem_p *mem_p, Mem_d *mem_d);
 void estagio_busca(Mem_p *mem_p, Pc *pc, Pipeline_estagio_1 *estagio1);
-void estagio_decod(Pipeline_estagio_1 *estagio1, Pipeline_estagio_2 *estagio2, BancoRegistradores *banco);
+void estagio_decod(Pipeline_estagio_1 *estagio1, Pipeline_estagio_2 *estagio2, Pipeline_estagio_3 *estagio3, BancoRegistradores *banco);
 void estagio_exec(Pipeline_estagio_3 *estagio3, Pipeline_estagio_2 *estagio2);
 void estagio_memoria(Pipeline_estagio_3 *estagio3, Pipeline_estagio_4 *estagio4, Pc *pc, Mem_d *mem_d);
 void estagio_writeback(BancoRegistradores *banco, Pipeline_estagio_4 *estagio4);
+void imprimir_instrucao(Instrucao *i);
+void pipelineInit(Pipeline_estagio_1 *estagio1, Pipeline_estagio_2 *estagio2, Pipeline_estagio_3 *estagio3, Pipeline_estagio_4 *estagio4);
+
 
 
 #endif /* PIPELINE_H__*/

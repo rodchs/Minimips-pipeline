@@ -10,21 +10,26 @@ int main() {
     Mem_d mem_d[256];
     Mem_p mem_p[256];
     
-    initMemorias(&mem_p, &mem_d);
     BancoRegistradores BR = {{0}};
-    int c = 1;
+
+    nodo *p = alocaNodo();
+    nodo *tmp;
     
     Pc pc;
-    pc.endereco = 0;
+    
     Pipeline_estagio_1 estagio1;
     Pipeline_estagio_2 estagio2;
     Pipeline_estagio_3 estagio3;
     Pipeline_estagio_4 estagio4;
-
+    
+    int c = 1;
+    int m, j, i = 0;
+    
+    pc.endereco = 0;
+    initMemorias(&mem_p, &mem_d);
     pipelineInit(&estagio1, &estagio2, &estagio3, &estagio4);
 
     while (c) {
-        int m, j = 0;
         
         printf("\n MINI-MIPS 8 BITS - UNIPAMPA\n"); 
         printf("1. Carregar memoria\n"); 
@@ -60,9 +65,10 @@ int main() {
                 imprimirSimulador(&BR); 
                 break;
             case 6: // imprimir tudo
-                imprimirMemoria(&mem_p);
-                ImprimirMemoriaDados(&mem_d);
-                imprimirSimulador(&BR);
+                // imprimirMemoria(&mem_p);
+                // ImprimirMemoriaDados(&mem_d);
+                // imprimirSimulador(&BR);
+                imprimirPipeline(&estagio1, &estagio2, &estagio3, &estagio4);
                 break;
             case 7: //Salvar .asm
                 salvar_asm(&mem_p);
@@ -71,23 +77,39 @@ int main() {
                 salvar_data(&mem_d);
                 break;
             case 9: //run
-            // while(strcmp(mem_p[pc.endereco - 1].inst, "0000000000000000\0") != 0){
-                estagio_writeback(&BR, &estagio4); 
-                // printf("DADO_LIDO: %d|ULA_OUT: %d|REG_WRITE: %d|REG_MEM: %d| RD: %d|\n", estagio4.dado_lido, estagio4.ULA_out, estagio4.reg_write, estagio4.reg_mem, estagio4.rd); 
-                estagio_memoria(&estagio3, &estagio4, &pc, &mem_d);
-                // printf("PC_NOVO: %d|DADO_LIDO: %d|ULA_OUT: %d|REG_WRITE: %d|REG_MEM: %d| RD: %d|\n", pc, estagio4.dado_lido, estagio4.ULA_out, estagio4.reg_write, estagio4.reg_mem, estagio4.rd); 
-                estagio_exec(&estagio3, &estagio2);
-                // printf("PC: %d|ULA_OUT: %d|F_ZERO: %d|F_JMP: %d| F_BRANCH: %d|\n", estagio3.pc, estagio3.ULA_out, estagio3.f_zero, estagio3.f_jump, estagio3.f_branch); 
-                estagio_decod(&estagio1, &estagio2, &estagio3, &BR);  
-                // printf("PC: %d|A: %d|B: %d|F_JMP: %d|ULAOp: %d|ULAFonte: %d|MEM_WRITE: %d|RD: %d\n", estagio2.pc, estagio2.A, estagio2.B, estagio2.f_jump, estagio2.ULAOp, estagio2.ULAFonte, estagio2.mem_write, estagio2.rd); 
-                estagio_busca(&mem_p, &pc, &estagio1);
-                // printf("ESTASGIO BUSCA\n");         
-                // printf("PC: %d| INST: %s\n", estagio1.pc, estagio1.inst);
-                // j++;
-                // }
+                for(i = 0; i < 255; i++){
+                    push(p, &pc, &mem_d, &BR, &estagio1, &estagio2, &estagio3, &estagio4);
+                    estagio_writeback(&BR, &estagio4); 
+                    estagio_memoria(&estagio3, &estagio4, &pc, &mem_d);
+                    estagio_exec(&estagio3, &estagio2);
+                    estagio_decod(&estagio1, &estagio2, &estagio3, &BR);  
+                    estagio_busca(&mem_p, &pc, &estagio1);
+                }
                 break;
-            case 10: // step
-            break;
+                case 10: // step
+                push(p, &pc, &mem_d, &BR, &estagio1, &estagio2, &estagio3, &estagio4);
+                estagio_writeback(&BR, &estagio4); 
+                estagio_memoria(&estagio3, &estagio4, &pc, &mem_d);
+                estagio_exec(&estagio3, &estagio2);
+                estagio_decod(&estagio1, &estagio2, &estagio3, &BR);  
+                estagio_busca(&mem_p, &pc, &estagio1);
+                break;
+            case 11: //back
+                tmp = pop(p);
+                if(tmp != NULL){
+                    pc = tmp->pc;
+                    BR = tmp->pBanco;
+                    for(int z = 0; z<255; z++){
+                        mem_d[z].dado = tmp->mem_d[z].dado;
+                    }
+                    estagio1 = tmp->estagio1;
+                    estagio2 = tmp->estagio2;
+                    estagio3 = tmp->estagio3;
+                    estagio4 = tmp->estagio4;
+                } else {
+                    printf("A pilha esta vazia e nao podemos mais voltar.\n");
+                }
+                break;
             case 0:
                 printf("Programa finalizado.\n");
                 c = 0;

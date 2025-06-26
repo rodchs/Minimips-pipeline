@@ -87,6 +87,20 @@ typedef struct{
 
 } Pipeline_estagio_4;
 
+struct Node{
+    Pc pc;
+    Mem_d mem_d[256];
+    BancoRegistradores pBanco;
+    Pipeline_estagio_1 estagio1;
+    Pipeline_estagio_2 estagio2;
+    Pipeline_estagio_3 estagio3;
+    Pipeline_estagio_4 estagio4;
+    struct Node *prox;
+};
+
+typedef struct Node nodo;
+
+
 Instrucao decod(char* inst);
 void carregarMemoria(Mem_p *mem_p);
 void carregarMemoriaDados(Mem_d *mem_d);
@@ -104,7 +118,10 @@ void estagio_memoria(Pipeline_estagio_3 *estagio3, Pipeline_estagio_4 *estagio4,
 void estagio_writeback(BancoRegistradores *banco, Pipeline_estagio_4 *estagio4);
 void imprimir_instrucao(Instrucao *i);
 void pipelineInit(Pipeline_estagio_1 *estagio1, Pipeline_estagio_2 *estagio2, Pipeline_estagio_3 *estagio3, Pipeline_estagio_4 *estagio4);
-
+void push(nodo *p, Pc *pPc, Mem_d *pMem_d, BancoRegistradores *pBanco, Pipeline_estagio_1 *pEstagio1, Pipeline_estagio_2 *pEstagio2, Pipeline_estagio_3 *pEstagio3, Pipeline_estagio_4 *pEstagio4);
+nodo *pop(nodo *p);
+nodo *alocaNodo();
+int estaVazia(nodo *p);
 
 
 #endif /* PIPELINE_H__*/

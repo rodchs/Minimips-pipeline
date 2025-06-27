@@ -24,7 +24,6 @@ int main() {
     
     int c = 1;
     int m, j, i = 0;
-    
     pc.endereco = 0;
     initMemorias(&mem_p, &mem_d);
     pipelineInit(&estagio1, &estagio2, &estagio3, &estagio4);
@@ -68,7 +67,7 @@ int main() {
                 // imprimirMemoria(&mem_p);
                 // ImprimirMemoriaDados(&mem_d);
                 // imprimirSimulador(&BR);
-                imprimirPipeline(&estagio1, &estagio2, &estagio3, &estagio4);
+                imprimirPipeline(&estagio1, &estagio2, &estagio3, &estagio4, &mem_p);
                 break;
             case 7: //Salvar .asm
                 salvar_asm(&mem_p);

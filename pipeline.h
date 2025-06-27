@@ -56,7 +56,6 @@ typedef struct{
     int ULAOp;
     int rd;
     int rt;
-    int dado_escrita;
     int ULAFonte;
 
 } Pipeline_estagio_2;
@@ -107,6 +106,8 @@ void carregarMemoriaDados(Mem_d *mem_d);
 void ImprimirMemoriaDados(Mem_d *mem_d);
 void imprimirSimulador(BancoRegistradores *BR);
 void imprimirMemoria(Mem_p *mem_p);
+void imprimir_instrucao(Instrucao *i);
+void imprimirPipeline(Pipeline_estagio_1 *estagio1, Pipeline_estagio_2 *estagio2, Pipeline_estagio_3 *estagio3, Pipeline_estagio_4 *estagio4, Mem_p *mem_p);
 void conv_asm(FILE* arquivo_asm, Instrucao inst);
 void salvar_asm(Mem_p *mem_p);
 void salvar_data(Mem_d *mem_d);
@@ -116,7 +117,6 @@ void estagio_decod(Pipeline_estagio_1 *estagio1, Pipeline_estagio_2 *estagio2, P
 void estagio_exec(Pipeline_estagio_3 *estagio3, Pipeline_estagio_2 *estagio2);
 void estagio_memoria(Pipeline_estagio_3 *estagio3, Pipeline_estagio_4 *estagio4, Pc *pc, Mem_d *mem_d);
 void estagio_writeback(BancoRegistradores *banco, Pipeline_estagio_4 *estagio4);
-void imprimir_instrucao(Instrucao *i);
 void pipelineInit(Pipeline_estagio_1 *estagio1, Pipeline_estagio_2 *estagio2, Pipeline_estagio_3 *estagio3, Pipeline_estagio_4 *estagio4);
 void push(nodo *p, Pc *pPc, Mem_d *pMem_d, BancoRegistradores *pBanco, Pipeline_estagio_1 *pEstagio1, Pipeline_estagio_2 *pEstagio2, Pipeline_estagio_3 *pEstagio3, Pipeline_estagio_4 *pEstagio4);
 nodo *pop(nodo *p);

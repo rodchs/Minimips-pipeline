@@ -164,7 +164,7 @@ void estagio_decod(Pipeline_estagio_1 *estagio1, Pipeline_estagio_2 *estagio2, P
     estagio2->reg_write = (inst.tipo == 1 || inst.opcode == 4 || inst.opcode == 11 && nop == 0) ? 1 : 0;
     estagio2->reg_mem = (inst.opcode == 11) ? 1 : 0;
 
-    printf("--------------------- estagio ID --------------------\n");
+    printf("--------------------- Executando estagio ID --------------------\n");
     printf("Instrucao Decodificada\n");
     if(hazard == 1){
         printf("-----------HAZARD DE DADOS DETECTADO!------------\n");

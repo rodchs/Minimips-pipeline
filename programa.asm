@@ -1,19 +1,19 @@
 addi $r3, $r0, 6
+addi $r4, $r0, 1
+addi $r5, $r0, -1
+beq $r3, $r0, 8
+add $r4, $r4, $r5
+sub $r5, $r4, $r5
+addi $r3, $r3, -1
+j 3
 addi $r7, $r0, 31
-addi $r6, $r0, 10
-addi $r0, $r0, 0
-addi $r0, $r0, 0
-addi $r0, $r0, 0
 add $r7, $r7, $r7
-add $r1, $r7, $r6
-addi $r0, $r0, 0
-addi $r0, $r0, 0
-addi $r0, $r0, 0
 add $r7, $r7, $r7
-addi $r0, $r0, 0
-addi $r0, $r0, 0
-addi $r0, $r0, 0
-sw $r7, 31($r7)
+sw $r4, 31($r7)
+lw $r1, 31($r7)
+
+
+
 
 
 

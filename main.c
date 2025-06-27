@@ -16,6 +16,8 @@ int main() {
     nodo *tmp;
     
     Pc pc;
+
+    Forward forward;
     
     Pipeline_estagio_1 estagio1;
     Pipeline_estagio_2 estagio2;
@@ -25,6 +27,7 @@ int main() {
     int c = 1;
     int m, j, i = 0;
     pc.endereco = 0;
+    forward.dado = 0;
     initMemorias(&mem_p, &mem_d);
     pipelineInit(&estagio1, &estagio2, &estagio3, &estagio4);
 
@@ -78,19 +81,19 @@ int main() {
             case 9: //run
                 for(i = 0; i < 255; i++){
                     push(p, &pc, &mem_d, &BR, &estagio1, &estagio2, &estagio3, &estagio4);
-                    estagio_writeback(&BR, &estagio4); 
-                    estagio_memoria(&estagio3, &estagio4, &pc, &mem_d);
-                    estagio_exec(&estagio3, &estagio2);
-                    estagio_decod(&estagio1, &estagio2, &estagio3, &BR);  
+                    estagio_writeback(&BR, &estagio4, &forward); 
+                    estagio_memoria(&estagio3, &estagio4, &pc, &mem_d, &estagio1, &estagio2);
+                    estagio_exec(&estagio3, &estagio2, &estagio4, &forward);
+                    estagio_decod(&estagio1, &estagio2, &estagio3, &estagio4, &BR);  
                     estagio_busca(&mem_p, &pc, &estagio1);
                 }
                 break;
                 case 10: // step
                 push(p, &pc, &mem_d, &BR, &estagio1, &estagio2, &estagio3, &estagio4);
-                estagio_writeback(&BR, &estagio4); 
-                estagio_memoria(&estagio3, &estagio4, &pc, &mem_d);
-                estagio_exec(&estagio3, &estagio2);
-                estagio_decod(&estagio1, &estagio2, &estagio3, &BR);  
+                estagio_writeback(&BR, &estagio4, &forward); 
+                estagio_memoria(&estagio3, &estagio4, &pc, &mem_d, &estagio1, &estagio2);
+                estagio_exec(&estagio3, &estagio2, &estagio4, &forward);
+                estagio_decod(&estagio1, &estagio2, &estagio3, &estagio4, &BR);  
                 estagio_busca(&mem_p, &pc, &estagio1);
                 break;
             case 11: //back

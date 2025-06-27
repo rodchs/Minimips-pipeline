@@ -57,6 +57,7 @@ typedef struct{
     int rd;
     int rt;
     int ULAFonte;
+    int branch_address;
 
 } Pipeline_estagio_2;
 
@@ -86,6 +87,10 @@ typedef struct{
 
 } Pipeline_estagio_4;
 
+typedef struct{
+    int dado;
+}Forward;
+
 struct Node{
     Pc pc;
     Mem_d mem_d[256];
@@ -96,6 +101,7 @@ struct Node{
     Pipeline_estagio_4 estagio4;
     struct Node *prox;
 };
+
 
 typedef struct Node nodo;
 
@@ -113,10 +119,10 @@ void salvar_asm(Mem_p *mem_p);
 void salvar_data(Mem_d *mem_d);
 void initMemorias(Mem_p *mem_p, Mem_d *mem_d);
 void estagio_busca(Mem_p *mem_p, Pc *pc, Pipeline_estagio_1 *estagio1);
-void estagio_decod(Pipeline_estagio_1 *estagio1, Pipeline_estagio_2 *estagio2, Pipeline_estagio_3 *estagio3, BancoRegistradores *banco);
-void estagio_exec(Pipeline_estagio_3 *estagio3, Pipeline_estagio_2 *estagio2);
-void estagio_memoria(Pipeline_estagio_3 *estagio3, Pipeline_estagio_4 *estagio4, Pc *pc, Mem_d *mem_d);
-void estagio_writeback(BancoRegistradores *banco, Pipeline_estagio_4 *estagio4);
+void estagio_decod(Pipeline_estagio_1 *estagio1, Pipeline_estagio_2 *estagio2, Pipeline_estagio_3 *estagio3, Pipeline_estagio_4 *estagio4, BancoRegistradores *banco);
+void estagio_exec(Pipeline_estagio_3 *estagio3, Pipeline_estagio_2 *estagio2, Pipeline_estagio_4 *estagio4, Forward *forward);
+void estagio_memoria(Pipeline_estagio_3 *estagio3, Pipeline_estagio_4 *estagio4, Pc *pc, Mem_d *mem_d, Pipeline_estagio_1 *estagio1, Pipeline_estagio_2 *estagio2);
+void estagio_writeback(BancoRegistradores *banco, Pipeline_estagio_4 *estagio4, Forward *forward);
 void pipelineInit(Pipeline_estagio_1 *estagio1, Pipeline_estagio_2 *estagio2, Pipeline_estagio_3 *estagio3, Pipeline_estagio_4 *estagio4);
 void push(nodo *p, Pc *pPc, Mem_d *pMem_d, BancoRegistradores *pBanco, Pipeline_estagio_1 *pEstagio1, Pipeline_estagio_2 *pEstagio2, Pipeline_estagio_3 *pEstagio3, Pipeline_estagio_4 *pEstagio4);
 nodo *pop(nodo *p);

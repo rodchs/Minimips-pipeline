@@ -164,14 +164,6 @@ void estagio_decod(Pipeline_estagio_1 *estagio1, Pipeline_estagio_2 *estagio2, P
     estagio2->reg_write = (inst.tipo == 1 || inst.opcode == 4 || inst.opcode == 11 && nop == 0) ? 1 : 0;
     estagio2->reg_mem = (inst.opcode == 11) ? 1 : 0;
 
-    // printf("----------------Executando estagio ID----------------\n");
-    // printf("----------------Instrucao Decodificada---------------\n");
-    // imprimir_instrucao(&inst);
-    // printf("----------------Sinais de Controle-------------------\n");
-    // printf("ULAop: %d | ULAFonte: %d | RegDst: %d | F_JUMP: %d | F_BRANCH: %d |\n MEM_WRITE: %d | REG_WRITE: %d | REG_MEM: %d\n",
-    // estagio2->ULAOp, estagio2->ULAFonte, estagio2->RegDst, estagio2->f_jump, estagio2->f_branch, estagio2->mem_write, estagio2->reg_write, estagio2->reg_mem);
-
-    
     printf("--------------------- estagio ID --------------------\n");
     printf("Instrucao Decodificada\n");
     if(hazard == 1){
@@ -236,18 +228,6 @@ void estagio_exec(Pipeline_estagio_3 *estagio3, Pipeline_estagio_2 *estagio2, Pi
     estagio3->f_zero = ula(A, B, 5); 
 
     printf("----------------Executando estagio EX----------------\n");
-    // printf("ULA_OUT: %d| A: %d| B: %d| RD: %d|\n", estagio3->ULA_out, A, B, estagio3->rd);
-    // if(estagio2->ULAOp == 0){
-    //     printf("OPERACAO: SOMA");
-    // } else if(estagio2->ULAOp == 1){
-    //     printf("OPERACAO: SUBTRACAO");
-    // }
-    // printf("----------------Sinais de Controle-------------------\n");
-    // printf("F_BRANCH: %d | MEM_WRITE: %d | MEM_READ : %d| REG_WRITE: %d | REG_MEM: %d\n",
-    // estagio3->f_branch, estagio3->mem_write, estagio3->mem_read, estagio3->reg_write, estagio3->reg_mem);
-    // printf("-----------------------------------------------------\n");
-
-    // printf("--------------------- estagio EX --------------------\n");
     printf("ULA_OUT: %d| A: %d| B: %d| RD: %d| ULAOP: %d| ULAFONTE: %d|\n", estagio3->ULA_out, A, B, estagio3->rd, estagio2->ULAOp, estagio2->ULAFonte);
     printf("F_JUMP: %d| F_BRANCH: %d | MEM_WRITE: %d | MEM_READ : %d| REG_WRITE: %d | REG_MEM: %d\n",
         estagio3->f_jump, estagio3->f_branch, estagio3->mem_write, estagio3->mem_read, estagio3->reg_write, estagio3->reg_mem);
@@ -288,8 +268,6 @@ void estagio_memoria(Pipeline_estagio_3 *estagio3, Pipeline_estagio_4 *estagio4,
     else{
         printf("Nao houve acesso a memoria!\n");
     }
-    // printf("Dado lido: %d\n", estagio4->dado_lido);
-    // printf("Dado escrito: %d no endereco %d\n", estagio3->dado_escrita, estagio3->ULA_out);
     printf("RD %d\n", estagio3->rd);
     printf("BRANCH_ADDRESS: %d|F_BRANCH: %d|F_ZERO: %d| JUMP_ADDRESS: %d|F_JUMP: %d|\n", estagio3->branch_address, estagio3->f_branch, estagio3->f_zero, estagio3->address, estagio3->f_jump);
     
@@ -333,7 +311,6 @@ void estagio_writeback(BancoRegistradores *banco, Pipeline_estagio_4 *estagio4, 
         printf("Nao houve escrita nos registradores!\n");
     }
 
-    // printf("-----------------------------------------------------\n");
 
     printf("RD: %d| DADO_LIDO: %d| ULA_OUT: %d| REG_WRITE %d| REG_MEM %d|\n", estagio4->rd, estagio4->dado_lido, estagio4->ULA_out, estagio4->reg_write, estagio4->reg_mem);
     printf("-----------------------------------------------------\n");
